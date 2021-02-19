@@ -1,0 +1,10 @@
+{
+  "name": "typescript",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "3d-force-graph": "1.67.8",
+    "@types/node": "^14.14.28",
+    "ngraph.generators": "^19.3.0"
+  }
+}
