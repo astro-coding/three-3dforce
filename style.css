@@ -1,6 +1,7 @@
 body {
   margin: 0;
   padding: 0;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 #overlay {
@@ -17,7 +18,52 @@ body {
   box-shadow: 0 0 10px #ffffff;
   pointer-events: none;
 }
+#toolbar {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  width: 800px;
+}
+#search-box {
+  padding: 4px;
+  padding-left: 8px;
+  font-size: 1.4em;
+  border-radius: 4px;
 
+  border: none;
+  display: block;
+  float: left;
+  margin-right: 20px;
+}
+#toolbar button {
+  height: 36px;
+  width: 36px;
+  border-radius: 20px;
+  border: none;
+  margin-top: -1px;
+  margin-left: 10px;
+  display: block;
+  float: left;
+}
+#search-results {
+  width: 240px;
+  position: absolute;
+  top: 60px;
+  border-radius: 4px;
+  background-color: white;
+  left: 20px;
+}
+#search-results ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+#search-results ul li {
+  padding: 10px;
+}
+#search-results ul li:hover {
+  background-color: #ffcc00;
+}
 .fade-in {
   animation: 3s fadeIn ease 2s forwards;
   -webkit-animation: 3s fadeIn ease 2s forwards;

@@ -3,22 +3,95 @@ import "./style.css";
 import ForceGraph3D from "3d-force-graph";
 let _data = require("./datasets/large.json");
 
-// Write TypeScript code!
+var Results = [];
+var FocusedNode = null;
+const highlightNodes = new Set();
+const highlightLinks = new Set();
+let hoverNode = null;
+var currentDimensions = 3;
+
 const appDiv: HTMLElement = document.getElementById("app");
+appDiv.addEventListener("click", StageClicked);
 const overlayDiv: HTMLElement = document.getElementById("overlay");
-/*/Making data
-var graph = require("ngraph.generators").wattsStrogatz(10000, 3, 0.1);
-//var graph = require("ngraph.generators").grid3(20, 10, 5);
-var _n = [];
-var _l = [];
-graph.forEachNode(d => {
-  _n.push({ GUID: d.id });
+const searchBox: HTMLElement = document.getElementById("search-box");
+const resultsPane: HTMLElement = document.getElementById("search-results");
+searchBox.addEventListener("keyup", e => {
+  var searchstring = (searchBox as any).value;
+  if (searchstring.length > 1) {
+    Results = FindNodes(searchstring);
+    RenderResults();
+  }
 });
-graph.forEachLink(d => {
-  _l.push({ source: d.fromId, target: d.toId });
+function FindNodes(st: string) {
+  return _data.nodes.filter(d => {
+    return (
+      d.name.toLowerCase().indexOf(st.toLowerCase()) > -1 ||
+      d.subtype.toLowerCase().indexOf(st.toLowerCase()) > -1
+    );
+  });
+}
+function RenderResults() {
+  //I wish I had angular here haha
+  var u = resultsPane.querySelector("ul");
+  u.innerHTML = null;
+  Results.forEach(d => {
+    var l = document.createElement("li");
+    l.innerText = d.name;
+    l.addEventListener("click", () => {
+      NodeRightClicked(d);
+    });
+    u.appendChild(l);
+  });
+}
+document.getElementById("3d-button").addEventListener("click", e => {
+  if (currentDimensions === 2) {
+    currentDimensions = 3;
+  } else {
+    currentDimensions = 2;
+  }
+  //console.log(currentDimensions);
+  myGraph.numDimensions(currentDimensions);
 });
-var _data = { nodes: _n, links: _l };
-//*/
+document
+  .getElementById("default-layout")
+  .addEventListener("click", e => SetLayout(""));
+document
+  .getElementById("lr-layout")
+  .addEventListener("click", e => SetLayout("lr"));
+document
+  .getElementById("bu-layout")
+  .addEventListener("click", e => SetLayout("bu"));
+document
+  .getElementById("td-layout")
+  .addEventListener("click", e => SetLayout("td"));
+document
+  .getElementById("zi-layout")
+  .addEventListener("click", e => SetLayout("zin"));
+document
+  .getElementById("zo-layout")
+  .addEventListener("click", e => SetLayout("zout"));
+document
+  .getElementById("ri-layout")
+  .addEventListener("click", e => SetLayout("radialin"));
+document
+  .getElementById("ro-layout")
+  .addEventListener("click", e => SetLayout("radialout"));
+function SetLayout(st) {
+  myGraph.dagMode(st);
+}
+function StageClicked(e) {
+  if (FocusedNode) {
+    FocusedNode = null;
+    overlayDiv.classList.remove("fade-in");
+    overlayDiv.style.display = "none";
+  }
+  if (Results.length > 0) {
+    Results = [];
+    resultsPane.querySelector("ul").innerHTML = null;
+    (searchBox as any).value = "";
+  }
+}
+
 function nodeLabel(d) {
   if (d.subtype && d.name) {
     return (
@@ -41,98 +114,98 @@ function linkLabel(d) {
 }
 
 function NodeClicked(node, event) {
-  console.log(node);
+  if ((!node && !highlightNodes.size) || (node && hoverNode === node)) return;
+
+  highlightNodes.clear();
+  highlightLinks.clear();
+  if (node) {
+    highlightNodes.add(node);
+    //console.log(node);
+    node.linkedNodes.forEach(neighbor => {
+      highlightNodes.add(neighbor);
+    });
+    FindLinks(node.GUID);
+  }
+  hoverNode = node || null;
+  updateHighlight();
+}
+
+function updateHighlight() {
+  // trigger update of highlighted objects in scene
+  myGraph
+    .nodeColor(myGraph.nodeColor())
+    .linkWidth(myGraph.linkWidth())
+    .linkColor(myGraph.linkColor())
+    .linkDirectionalParticles(myGraph.linkDirectionalParticles());
+}
+
+function FindLinks(guid) {
+  _data.links.forEach(d => {
+    if (guid === d.source.GUID || d.target.GUID === guid) {
+      highlightLinks.add(d);
+    }
+  });
+}
+function NodeRightClicked(node) {
+  FocusedNode = node;
+  (overlayDiv.querySelector(".double-overlay h4") as any).innerText = node.name;
+  (overlayDiv.querySelector(".double-overlay p") as any).innerText =
+    node.subtype;
+  overlayDiv.style.display = "block";
+  overlayDiv.classList.add("fade-in");
+  const distance = 40;
+  const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
+  myGraph.cameraPosition(
+    { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio }, // new position
+    node, // lookAt ({ x, y, z })
+    3000 // ms transition duration
+  );
 }
 function LinkClicked(link, event) {
   console.log(link);
 }
-
-/*/ cross-link node objects
-_data.links.forEach(link => {
-  const a = _data.nodes[link.source.GUID];
-  const b = _data.nodes[link.target.GUID];
-  !a.neighbors && (a.neighbors = []);
-  !b.neighbors && (b.neighbors = []);
-  a.neighbors.push(b);
-  b.neighbors.push(a);
-
-  !a.links && (a.links = []);
-  !b.links && (b.links = []);
-  a.links.push(link);
-  b.links.push(link);
-});
-//*/
-
-const highlightNodes = new Set();
-const highlightLinks = new Set();
-let hoverNode = null;
-//const distance = 1400;
 
 var myGraph = ForceGraph3D();
 myGraph(appDiv)
   .graphData(_data)
   .nodeId("GUID")
   .nodeAutoColorBy("subtype")
-  .linkAutoColorBy("strength")
-  //  .cameraPosition({ z: distance })
+  .showNavInfo(false)
+  //.linkAutoColorBy("strength")
+  .linkColor(link => (highlightLinks.has(link) ? "white" : "orange"))
   .warmupTicks(40)
+
+  .onNodeClick(NodeClicked)
+  .onLinkClick(LinkClicked)
+  .onNodeRightClick(NodeRightClicked)
   .onNodeDragEnd(node => {
     node.fx = node.x;
     node.fy = node.y;
     node.fz = node.z;
   })
 
-  .onNodeClick(NodeClicked)
-  .onLinkClick(LinkClicked)
-  //slows down
-  //.linkDirectionalArrowLength(2)
-
-  //blows up
-  // .linkCurvature(0.1)
-  //.linkWidth(1)
-
   .nodeLabel(nodeLabel)
   .linkLabel(linkLabel)
-
   .forceEngine("d3")
-
-  .numDimensions(3)
-  .dagMode("zin") //"","bu","td","lr","zin","zout","radialin","radialout"
+  .numDimensions(currentDimensions)
+  .dagMode("") //"","bu","td","lr","zin","zout","radialin","radialout"
   .onNodeHover(node => (appDiv.style.cursor = node ? "pointer" : null))
-  .onNodeRightClick(node => {
-    // Aim at node from outside it
-    overlayDiv.style.display = "block";
-    overlayDiv.classList.add("fade-in");
-    const distance = 40;
-    const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
-    myGraph.cameraPosition(
-      { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio }, // new position
-      node, // lookAt ({ x, y, z })
-      3000 // ms transition duration
-    );
-  });
-/*/
-  .linkDirectionalParticles(2)
-  .linkDirectionalParticleWidth(0.8)
-  .linkDirectionalParticleSpeed(0.006);
-  //*/
-/*
-  .onNodeHover(node => {
-    // no state change
-    if ((!node && !highlightNodes.size) || (node && hoverNode === node)) return;
-
-    highlightNodes.clear();
-    highlightLinks.clear();
-    if (node) {
-      highlightNodes.add(node);
-      node.neighbors.forEach(neighbor => highlightNodes.add(neighbor));
-      node.links.forEach(link => highlightLinks.add(link));
-    }
-
-    hoverNode = node || null;
-
-    updateHighlight();
+  //*/PARTICLE HOVER WORK
+  .onLinkHover(link => {
+    //console.log(link);
+    //myGraph.emitParticle(link);
   })
+  .linkWidth(link => (highlightLinks.has(link) ? 4 : ""))
+  .linkDirectionalParticles(link => (highlightLinks.has(link) ? 4 : 0))
+  //.linkDirectionalParticles(0)
+  .linkDirectionalParticleSpeed(0.006)
+  .linkDirectionalParticleColor(() => "white")
+  .linkDirectionalParticleWidth(2)
+  .linkHoverPrecision(2);
+//*/
+//*
+//can't do on hover for large graphs. super slow
+/*/
   .onLinkHover(link => {
     highlightNodes.clear();
     highlightLinks.clear();
@@ -144,18 +217,18 @@ myGraph(appDiv)
     }
 
     updateHighlight();
-  })
-  //*/
+  });
+//*/
 
-function updateHighlight() {
-  // trigger update of highlighted objects in scene
-  myGraph
-    .nodeColor(myGraph.nodeColor())
-    .linkWidth(myGraph.linkWidth())
-    .linkDirectionalParticles(myGraph.linkDirectionalParticles());
-}
+//slows down
+//.linkDirectionalArrowLength(2)
+
+//blows up
+// .linkCurvature(0.1)
+//.linkWidth(1)
 
 /*/ camera orbit
+Conflicts with mouse
 let angle = 0;
 setInterval(() => {
   myGraph.cameraPosition({
@@ -168,3 +241,17 @@ setInterval(() => {
 //not working
 //.d3Force("center")
 //myGraph(appDiv).jsonUrl("./datasets/medium.json");
+
+/*/Making data (linkedNodes should break this?)
+var graph = require("ngraph.generators").wattsStrogatz(10000, 3, 0.1);
+//var graph = require("ngraph.generators").grid3(20, 10, 5);
+var _n = [];
+var _l = [];
+graph.forEachNode(d => {
+  _n.push({ GUID: d.id });
+});
+graph.forEachLink(d => {
+  _l.push({ source: d.fromId, target: d.toId });
+});
+var _data = { nodes: _n, links: _l };
+//*/
