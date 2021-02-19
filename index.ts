@@ -5,17 +5,16 @@ let _data = require("./datasets/large.json");
 
 // Write TypeScript code!
 const appDiv: HTMLElement = document.getElementById("app");
-
+const overlayDiv: HTMLElement = document.getElementById("overlay");
 /*/Making data
 var graph = require("ngraph.generators").wattsStrogatz(10000, 3, 0.1);
 //var graph = require("ngraph.generators").grid3(20, 10, 5);
 var _n = [];
 var _l = [];
 graph.forEachNode(d => {
-  _n.push({ id: d.id });
+  _n.push({ GUID: d.id });
 });
 graph.forEachLink(d => {
-  console.log(d.fromId, d.toId);
   _l.push({ source: d.fromId, target: d.toId });
 });
 var _data = { nodes: _n, links: _l };
@@ -98,7 +97,20 @@ myGraph(appDiv)
   .forceEngine("d3")
 
   .numDimensions(3)
-  .dagMode("zin"); //"","bu","td","lr","zin","zout","radialin","radialout"
+  .dagMode("zin") //"","bu","td","lr","zin","zout","radialin","radialout"
+  .onNodeHover(node => (appDiv.style.cursor = node ? "pointer" : null))
+  .onNodeRightClick(node => {
+    // Aim at node from outside it
+    overlayDiv.style.display = "block";
+    overlayDiv.classList.add("fade-in");
+    const distance = 40;
+    const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
+    myGraph.cameraPosition(
+      { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio }, // new position
+      node, // lookAt ({ x, y, z })
+      3000 // ms transition duration
+    );
+  });
 /*/
   .linkDirectionalParticles(2)
   .linkDirectionalParticleWidth(0.8)

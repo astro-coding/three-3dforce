@@ -3,6 +3,74 @@ body {
   padding: 0;
 }
 
+#overlay {
+  position: absolute;
+  opacity: 0;
+  display: none;
+  width: 180px;
+  left: calc(50% - 100px);
+  height: 180px;
+  top: calc(50% - 100px);
+  background-color: transparent;
+  border: 20px solid black;
+  border-radius: 50%;
+  box-shadow: 0 0 10px #ffffff;
+  pointer-events: none;
+}
+
+.fade-in {
+  animation: 3s fadeIn ease 2s forwards;
+  -webkit-animation: 3s fadeIn ease 2s forwards;
+  -moz-animation: 3s fadeIn ease 2s forwards;
+  -o-animation: 3s fadeIn ease 2s forwards;
+  -ms-animation: 3s fadeIn ease 2s forwards;
+}
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+div.double-overlay {
+  background-color: rgba(255, 255, 255, 0.8);
+  display: block;
+  position: absolute;
+  padding: 10px;
+  left: 80px;
+  top: 97px;
+  min-width: 300px;
+  border-radius: 4px;
+  border: 2px solid white;
+  box-shadow: 0 0 13px white;
+}
+.double-overlay ul,
+.double-overaly ul li {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.double-overlay ul {
+  margin-top: 20px;
+}
+.double-overlay ul li {
+  pointer-events: all;
+  cursor: pointer;
+  display: block;
+  float: left;
+  border: 2px solid black;
+  padding: 5px;
+  width: 24px;
+  text-align: center;
+  height: 24px;
+  margin-right: 4px;
+  border-radius: 50%;
+}
+.double-overlay ul li:hover {
+  background-color: white;
+}
 div.lbl {
   background-color: rgba(0, 0, 0, 0.75);
   padding: 8px;
