@@ -98,7 +98,7 @@ myGraph(appDiv)
   .forceEngine("d3")
 
   .numDimensions(3)
-  .dagMode(""); //"","bu","td","lr","zin","zout","radialin","radialout"
+  .dagMode("zin"); //"","bu","td","lr","zin","zout","radialin","radialout"
 /*/
   .linkDirectionalParticles(2)
   .linkDirectionalParticleWidth(0.8)
