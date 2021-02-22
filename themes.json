@@ -1,0 +1,32 @@
+[
+  {
+    "name":"dark",
+    "background":"#222",
+    "nodeInterpolation":"interpolateWarm",
+    "lineColor":"#ccc"
+  },
+  {
+    "name":"light",
+    "background":"#ddd",
+    "nodeInterpolation":"",
+    "lineColor":"#88aaaa"
+  },
+  {
+    "name":"black",
+    "background":"black",
+    "nodeInterpolation":"interpolateBuGn",
+    "lineColor":"#88aaaa"
+  },
+  {
+    "name":"white",
+    "background":"#fff",
+    "nodeInterpolation":"interpolateSpectral",
+    "lineColor":"#ccaaaa"
+  },
+  {
+    "name":"color",
+    "background":"pink",
+    "nodeInterpolation":"schemeRdPu",
+    "lineColor":"violet"
+  }
+]

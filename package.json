@@ -5,6 +5,7 @@
   "dependencies": {
     "3d-force-graph": "1.67.8",
     "@types/node": "^14.14.28",
+    "d3-scale-chromatic": "^2.0.0",
     "ngraph.generators": "^19.3.0"
   }
 }

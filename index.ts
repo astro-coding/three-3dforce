@@ -1,8 +1,12 @@
 // Import stylesheets
 import "./style.css";
 import ForceGraph3D from "3d-force-graph";
+let d3 = require("d3-scale-chromatic");
 let _data = require("./datasets/current.json");
+let _themes = require("./themes.json");
 
+var CurrentTheme = _themes[0];
+var colorMap;
 var Results = [];
 var FocusedNode = null;
 const highlightNodes = new Set();
@@ -76,6 +80,35 @@ document
 document
   .getElementById("ro-layout")
   .addEventListener("click", e => SetLayout("radialout"));
+document.getElementById("theme").addEventListener("click", ChangeTheme);
+
+//interpolateViridis
+//interpolateOranges
+//interpolateInferno
+//interpolateTurbo
+//interpolateMagma
+//interpolatePlasma
+//interpolateCividis
+//interpolateWarm
+//interpolateCool
+//interpolateCubehelixDefault
+//more at https://github.com/d3/d3-scale-chromatic
+SetColorMap("interpolateCool");
+function SetColorMap(interpolation) {
+  colorMap = {};
+  var entityCount = 0;
+  _data.nodes.forEach(d => {
+    if (!colorMap[d.subtype]) {
+      entityCount++;
+      colorMap[d.subtype] = { index: entityCount };
+    }
+  });
+  for (var i in colorMap) {
+    var el = colorMap[i];
+    el.color = d3[interpolation](el.index / entityCount);
+  }
+  console.log(colorMap);
+}
 function SetLayout(st) {
   myGraph.dagMode(st);
 }
@@ -90,6 +123,14 @@ function StageClicked(e) {
     resultsPane.querySelector("ul").innerHTML = null;
     (searchBox as any).value = "";
   }
+}
+
+function ChangeTheme() {
+  SetColorMap("interpolatePlasma");
+  myGraph
+    .backgroundColor("#333")
+    //.linkColor(myGraph.linkColor())
+    .nodeColor(myGraph.nodeColor());
 }
 
 function nodeLabel(d) {
@@ -112,7 +153,12 @@ function linkLabel(d) {
 
   return "<div class='lbl'>" + lbl + "</div>";
 }
-
+function GetNodeColor(d) {
+  if (highlightNodes.has(d)) {
+    return "black";
+  }
+  return colorMap[d.subtype].color;
+}
 function NodeClicked(node, event) {
   if ((!node && !highlightNodes.size) || (node && hoverNode === node)) return;
 
@@ -164,19 +210,41 @@ function NodeRightClicked(node) {
 function LinkClicked(link, event) {
   console.log(link);
 }
+function LinkColor(link) {
+  if (highlightLinks.has(link)) {
+    return "white";
+  }
+  return "#88aaaa";
+}
 
-var myGraph = ForceGraph3D();
+var config: any = { antialias: false, alpha: false };
+//more tuning can be done in the config of myraph using these properties...
+//https://threejs.org/docs/#api/en/renderers/WebGLRenderer
+
+var myGraph = ForceGraph3D(config);
 myGraph(appDiv)
   .graphData(_data)
   .nodeId("GUID")
-  .nodeAutoColorBy("subtype")
-  .showNavInfo(false)
-  //.linkAutoColorBy("strength")
-  .linkColor(link => (highlightLinks.has(link) ? "white" : "orange"))
-  .warmupTicks(40)
 
+  //defaults
+  .showNavInfo(false)
+  .backgroundColor("#fff")
+  .warmupTicks(40)
+  //"ngraph might be better at scale, but not interactive"
+  .forceEngine("d3")
+  .numDimensions(currentDimensions)
+  .dagMode("") //"","bu","td","lr","zin","zout","radialin","radialout"
+
+  //node
+  //.nodeThreeObject([Object3d, str or fn])
+  .nodeRelSize(4)
+  .nodeResolution(10)
+
+  //.nodeAutoColorBy("subtype")
+  .nodeColor(GetNodeColor)
+  .nodeLabel(nodeLabel)
+  .onNodeHover(node => (appDiv.style.cursor = node ? "pointer" : null))
   .onNodeClick(NodeClicked)
-  .onLinkClick(LinkClicked)
   .onNodeRightClick(NodeRightClicked)
   .onNodeDragEnd(node => {
     node.fx = node.x;
@@ -184,24 +252,25 @@ myGraph(appDiv)
     node.fz = node.z;
   })
 
-  .nodeLabel(nodeLabel)
-  .linkLabel(linkLabel)
-  .forceEngine("d3")
-  .numDimensions(currentDimensions)
-  .dagMode("") //"","bu","td","lr","zin","zout","radialin","radialout"
-  .onNodeHover(node => (appDiv.style.cursor = node ? "pointer" : null))
-  //*/PARTICLE HOVER WORK
-  .onLinkHover(link => {
-    //console.log(link);
-    //myGraph.emitParticle(link);
-  })
+  //link
+  //.linkAutoColorBy("strength")
+  .linkColor(LinkColor)
   .linkWidth(link => (highlightLinks.has(link) ? 4 : ""))
   .linkDirectionalParticles(link => (highlightLinks.has(link) ? 4 : 0))
   //.linkDirectionalParticles(0)
   .linkDirectionalParticleSpeed(0.006)
   .linkDirectionalParticleColor(() => "white")
   .linkDirectionalParticleWidth(2)
-  .linkHoverPrecision(2);
+  .linkLabel(linkLabel)
+  .linkHoverPrecision(2)
+  .onLinkHover(link => {
+    //console.log(link);
+    //myGraph.emitParticle(link);
+  })
+  .onLinkClick(LinkClicked);
+
+//*/PARTICLE HOVER WORK
+
 //*/
 //*
 //can't do on hover for large graphs. super slow
