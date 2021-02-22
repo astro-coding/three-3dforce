@@ -1,7 +1,7 @@
 // Import stylesheets
 import "./style.css";
 import ForceGraph3D from "3d-force-graph";
-let _data = require("./datasets/large.json");
+let _data = require("./datasets/current.json");
 
 var Results = [];
 var FocusedNode = null;
