@@ -3,7 +3,7 @@ import "./style.css";
 import ForceGraph3D from "3d-force-graph";
 let d3 = require("d3-scale-chromatic");
 let _data = require("./datasets/current.json");
-let _themes = require("./themes.json");
+const _themes = require("./themes.json");
 
 var CurrentTheme = _themes[0];
 var colorMap;
@@ -82,18 +82,8 @@ document
   .addEventListener("click", e => SetLayout("radialout"));
 document.getElementById("theme").addEventListener("click", ChangeTheme);
 
-//interpolateViridis
-//interpolateOranges
-//interpolateInferno
-//interpolateTurbo
-//interpolateMagma
-//interpolatePlasma
-//interpolateCividis
-//interpolateWarm
-//interpolateCool
-//interpolateCubehelixDefault
-//more at https://github.com/d3/d3-scale-chromatic
-SetColorMap("interpolateCool");
+//interpolations at https://github.com/d3/d3-scale-chromatic
+SetColorMap(CurrentTheme.nodeInterpolation);
 function SetColorMap(interpolation) {
   colorMap = {};
   var entityCount = 0;
