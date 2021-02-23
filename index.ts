@@ -2,7 +2,7 @@
 import "./style.css";
 import ForceGraph3D from "3d-force-graph";
 let d3 = require("d3-scale-chromatic");
-let _data = require("./datasets/la.json");
+let _data = require("./datasets/lar.json");
 const _themes = require("./themes.json");
 
 var CurrentTheme = 0;
