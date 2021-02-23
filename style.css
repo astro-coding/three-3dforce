@@ -44,7 +44,12 @@ body {
   margin-left: 10px;
   display: block;
   float: left;
+  cursor: pointer;
 }
+#toolbar button:hover {
+  background-color: #ffcc00;
+}
+
 #search-results {
   width: 240px;
   position: absolute;
@@ -57,9 +62,13 @@ body {
   margin: 0;
   padding: 0;
   list-style: none;
+  max-height: 80vh;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 #search-results ul li {
   padding: 10px;
+  cursor: pointer;
 }
 #search-results ul li:hover {
   background-color: #ffcc00;

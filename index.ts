@@ -2,10 +2,10 @@
 import "./style.css";
 import ForceGraph3D from "3d-force-graph";
 let d3 = require("d3-scale-chromatic");
-let _data = require("./datasets/current.json");
+let _data = require("./datasets/la.json");
 const _themes = require("./themes.json");
 
-var CurrentTheme = _themes[0];
+var CurrentTheme = 0;
 var colorMap;
 var Results = [];
 var FocusedNode = null;
@@ -83,8 +83,9 @@ document
 document.getElementById("theme").addEventListener("click", ChangeTheme);
 
 //interpolations at https://github.com/d3/d3-scale-chromatic
-SetColorMap(CurrentTheme.nodeInterpolation);
+SetColorMap(_themes[CurrentTheme].nodeInterpolation);
 function SetColorMap(interpolation) {
+  console.log(interpolation);
   colorMap = {};
   var entityCount = 0;
   _data.nodes.forEach(d => {
@@ -116,10 +117,16 @@ function StageClicked(e) {
 }
 
 function ChangeTheme() {
-  SetColorMap("interpolatePlasma");
+  CurrentTheme++;
+  if (CurrentTheme >= _themes.length) {
+    CurrentTheme = 0;
+  }
+  var t = _themes[CurrentTheme];
+  console.log(t, CurrentTheme);
+  SetColorMap(t.nodeInterpolation);
   myGraph
-    .backgroundColor("#333")
-    //.linkColor(myGraph.linkColor())
+    .backgroundColor(t.background)
+    .linkColor(myGraph.linkColor())
     .nodeColor(myGraph.nodeColor());
 }
 
@@ -204,7 +211,7 @@ function LinkColor(link) {
   if (highlightLinks.has(link)) {
     return "white";
   }
-  return "#88aaaa";
+  return _themes[CurrentTheme].lineColor;
 }
 
 var config: any = { antialias: false, alpha: false };
@@ -218,7 +225,7 @@ myGraph(appDiv)
 
   //defaults
   .showNavInfo(false)
-  .backgroundColor("#fff")
+  .backgroundColor(_themes[CurrentTheme].background)
   .warmupTicks(40)
   //"ngraph might be better at scale, but not interactive"
   .forceEngine("d3")
